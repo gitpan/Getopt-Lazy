@@ -1,0 +1,14 @@
+# http://module-build.sourceforge.net/META-spec.html
+#XXXXXXX This is a prototype!!!  It will change in the future!!! XXXXX#
+name:         Getopt-Lazy
+version:      v0.0.1
+version_from: lib/Getopt/Lazy.pm
+installdirs:  site
+requires:
+    File::Basename:                1
+    Test::More:                    0
+    Text::Wrap:                    1
+    version:                       0
+
+distribution_type: module
+generated_by: ExtUtils::MakeMaker version 6.30
