@@ -1,6 +1,6 @@
 package Getopt::Lazy;
 
-use version; our $VERSION = qv('0.0.1');
+use version; our $VERSION = qv('0.0.2');
 
 use strict;
 use warnings;
@@ -107,7 +107,7 @@ use Carp;
 
 our @ISA = qw/Exporter/;
 our @EXPORT = qw/usage getopt/;
-our %OPT = ();
+our %OPT = ('help|h' => 'Show this help screen');
 our %USAGE = ();
 our %CONFIG = ();
 
