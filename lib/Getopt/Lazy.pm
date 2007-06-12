@@ -1,6 +1,6 @@
 package Getopt::Lazy;
 
-use version; our $VERSION = qv('0.0.2');
+use version; our $VERSION = qv('0.0.3');
 
 use strict;
 use warnings;
@@ -107,7 +107,7 @@ use Carp;
 
 our @ISA = qw/Exporter/;
 our @EXPORT = qw/usage getopt/;
-our %OPT = ('help|h' => 'Show this help screen');
+our %OPT = ();
 our %USAGE = ();
 our %CONFIG = ();
 
@@ -175,7 +175,7 @@ sub usage {
     print $msg, "\n" if defined $msg;
     print $cmd, ($summary? " - $summary\n": "\n");
     print "Usage:  $usage\n" if defined $usage;
-    next unless keys %USAGE;
+    return unless keys %USAGE;
 
     print "Options:\n";
     my $size = 8 * int (((reverse sort { $a <=> $b } map length $_, keys %USAGE)[0] + 8) / 8);
