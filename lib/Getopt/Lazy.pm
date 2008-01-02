@@ -1,6 +1,6 @@
 package Getopt::Lazy;
 
-use version; our $VERSION = qv('0.0.4');
+use version; our $VERSION = qv('0.0.5');
 
 use strict;
 use warnings;
@@ -112,6 +112,16 @@ our %opt = ();
 our %usage = ();
 our %conf = ();
 
+=over 2
+
+=item show_help
+
+Show the help screen
+
+=back
+
+=cut
+
 sub show_help {
     use File::Basename;
     use Text::Wrap;
@@ -180,7 +190,7 @@ sub import {
 
 =over 2
 
-=item getopt
+=item GetOptions
 
 Make Getopt::Long work!
 
