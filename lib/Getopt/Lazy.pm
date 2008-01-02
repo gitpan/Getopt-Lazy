@@ -1,6 +1,6 @@
 package Getopt::Lazy;
 
-use version; our $VERSION = qv('0.0.3');
+use version; our $VERSION = qv('0.0.4');
 
 use strict;
 use warnings;
@@ -106,22 +106,47 @@ lazier ways of doing the same thing, be sure to let me know!
 use Carp;
 
 our @ISA = qw/Exporter/;
-our @EXPORT = qw/usage getopt/;
-our %OPT = ();
-our %USAGE = ();
-our %CONFIG = ();
+our @EXPORT = qw/GetOptions/;
+
+our %opt = ();
+our %usage = ();
+our %conf = ();
+
+sub show_help {
+    use File::Basename;
+    use Text::Wrap;
+
+    my $msg = shift;
+    my $cmd = $conf{cmd} || basename $0;
+    my $summary = $conf{summary}; 
+    my $usage = $conf{usage} || '%c %o';
+    $usage =~ s/\%c\b/$cmd/g;
+    $usage =~ s/\%o\b/[options..]/g;
+
+    print $msg, "\n" if defined $msg;
+    print "$cmd - $summary\n" if defined $summary;
+    print "usage:  $usage\n" if defined $usage;
+    return unless keys %usage;
+
+    print "options:\n";
+    my $size = 8 * int (((reverse sort { $a <=> $b } map length $_, keys %usage)[0] + 8) / 8);
+    for (sort keys %usage) {
+	printf "\t%-${size}s%s\n", $_, $usage{$_};
+    }
+
+    1;
+}
 
 sub import {
     my $pkg = shift;
     my %o = @_;
 
-    for (keys %o) {
-	m/^-(\w+)$/ and do {
-	    $CONFIG{$1} = $o{$_};
-	    next;
-	};
+    $o{"&help"} = ["Show this help screen", sub { show_help and exit }];
 
-	my ($type, $spec, $name) = m/^([\@\%\$])?((.+?)(?:\|.*)?(?:\=.*)?)$/;
+    for (keys %o) {
+	m/^-(\w+)$/ and do { $conf{$1} = $o{$_}; next; };
+
+	my ($type, $spec, $name) = m/^([\&\@\%\$])?((.+?)(?:\|.*)?(?:\=.*)?)$/;
 	my $guess = undef;
 	(my $var = $name) =~ s/-/_/g;
 	push @EXPORT, ($type || $guess || '$') . $var;
@@ -130,60 +155,27 @@ sub import {
 	my ($desc, @def) = ref $o{$_} eq 'ARRAY' ? @{$o{$_}}: $o{$_};
 	$spec =~ /\|(\w+)=/ and $item .= ", -$1";
 	$desc =~ s/^\[([A-Z_-]+)\]\s*// and $item .= " $1";
-	$USAGE{$item} = $desc;
+	$usage{$item} = $desc;
 
         no strict 'refs';
-        not (defined $type and $type eq '$') and do {
-            $USAGE{$item} .= " (default: $def[0])" if $def[0];
-            ${"$var"} = pop @def;
-            $OPT{$spec} = *{"$var"}{SCALAR};
+        (not defined $type or $type eq '$') and do {
+            $usage{$item} .= " (default: $def[0])" if $def[0];
+            ${"$var"} = shift @def;
+            $opt{$spec} = *{"$var"}{SCALAR};
         } or $type eq '@' and do {
-            $USAGE{$item} .= " (default: ".join(',', @def).")" if @def > 0;
+            $usage{$item} .= " (default: ".join(',', @def).")" if @def > 0;
             @{"$var"} = (@def);
-            $OPT{$spec} = *{"$var"}{ARRAY};
+            $opt{$spec} = *{"$var"}{ARRAY};
         } or $type eq '%' and do {
             %{"$var"} = (@def);
-            $OPT{$spec} = *{"$var"}{HASH};
-        };
-
+            $opt{$spec} = *{"$var"}{HASH};
+        } or $type eq '&' and do {
+	    my $code = shift @def;
+	    $opt{$spec} = $code;
+	};
     }
 
     $pkg->export_to_level(1, undef, @EXPORT);
-}
-
-=over 2
-
-=item usage
-
-Show the GNU-style help screen 
-
-=back
-
-=cut
-
-sub usage {
-    use File::Basename;
-    use Text::Wrap;
-
-    my $msg = shift;
-    my $cmd = $CONFIG{cmd} || basename $0;
-    my $summary = $CONFIG{summary}; 
-    my $usage = $CONFIG{usage} || '%c %o';
-    $usage =~ s/\%c\b/$cmd/g;
-    $usage =~ s/\%o\b/[options..]/g;
-
-    print $msg, "\n" if defined $msg;
-    print $cmd, ($summary? " - $summary\n": "\n");
-    print "Usage:  $usage\n" if defined $usage;
-    return unless keys %USAGE;
-
-    print "Options:\n";
-    my $size = 8 * int (((reverse sort { $a <=> $b } map length $_, keys %USAGE)[0] + 8) / 8);
-    for (sort keys %USAGE) {
-	printf "\t%-${size}s%s\n", $_, $USAGE{$_};
-    }
-
-    1;
 }
 
 =over 2
@@ -196,9 +188,15 @@ Make Getopt::Long work!
 
 =cut
 
-sub getopt {
-    use Getopt::Long;
-    GetOptions %OPT;
+sub GetOptions {
+    my %o = @_;
+
+    use Getopt::Long ();
+    Getopt::Long::GetOptions %opt;
+
+    return unless defined $o{-autohelp};
+    my $show_help = ref $o{-autohelp} eq "CODE"? $o{-autohelp}->(): scalar $o{-autohelp};
+    show_help and exit if $show_help;
 }
 
 
