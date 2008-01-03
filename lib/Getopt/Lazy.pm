@@ -1,6 +1,9 @@
 package Getopt::Lazy;
 
-use version; our $VERSION = qv('0.0.5');
+require 5.006;
+
+use version; 
+our $VERSION = qv('0.0.6');
 
 use strict;
 use warnings;

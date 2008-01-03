@@ -1,6 +1,6 @@
 --- #YAML:1.0
 name:                Getopt-Lazy
-version:             v0.0.5
+version:             v0.0.6
 abstract:            Yet another lazy, minimal way of using Getopt::Long
 license:             ~
 generated_by:        ExtUtils::MakeMaker version 6.36
